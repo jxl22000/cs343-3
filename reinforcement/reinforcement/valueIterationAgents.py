@@ -61,8 +61,19 @@ class ValueIterationAgent(ValueEstimationAgent):
 
     def runValueIteration(self):
         # Write value iteration code here
-        "*** YOUR CODE HERE ***"
 
+        for i in range(self.iterations):
+            new_values = self.values.copy()
+
+            for state in self.mdp.getStates():
+                if self.mdp.isTerminal(state):
+                    continue
+
+                # best_q = float('-inf')
+                new_values[state] = self.computeQValueFromValues(state, self.computeActionFromValues(state))
+
+            "*** YOUR CODE HERE ***"
+            self.values = new_values
 
     def getValue(self, state):
         """
@@ -77,6 +88,12 @@ class ValueIterationAgent(ValueEstimationAgent):
           value function stored in self.values.
         """
         "*** YOUR CODE HERE ***"
+        total = 0
+        for (nextState, prob) in self.mdp.getTransitionStatesAndProbs(state, action):
+            r = self.mdp.getReward(state, action, nextState)
+            total += prob * (r + self.discount * self.values[nextState])
+
+        return total
         util.raiseNotDefined()
 
     def computeActionFromValues(self, state):
@@ -88,7 +105,24 @@ class ValueIterationAgent(ValueEstimationAgent):
           there are no legal actions, which is the case at the
           terminal state, you should return None.
         """
+        if self.mdp.isTerminal(state):
+            return None
+        # mdp.getStates()
+        #       mdp.getPossibleActions(state)
+        #       mdp.getTransitionStatesAndProbs(state, action)
+        #       mdp.getReward(state, action, nextState)
+        #       mdp.isTerminal(state)
+        maxVal = float('-inf')
+        bestAction = None
+        for action in self.mdp.getPossibleActions(state):
+            cur = self.computeQValueFromValues(state, action)
+            if cur > maxVal:
+                maxVal = cur
+                bestAction = action
+
+        # self.values[state] = maxVal
         "*** YOUR CODE HERE ***"
+        return bestAction
         util.raiseNotDefined()
 
     def getPolicy(self, state):
