@@ -199,5 +199,62 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
         ValueIterationAgent.__init__(self, mdp, discount, iterations)
 
     def runValueIteration(self):
-        "*** YOUR CODE HERE ***"
+        
+        # predecessors
+
+        pred = {}
+        for s in self.mdp.getStates():
+            if self.mdp.isTerminal(s):
+                continue
+
+            for action in self.mdp.getPossibleActions(s):
+                for nextState, prob in self.mdp.getTransitionStatesAndProbs(s, action):
+                    if prob != 0:
+                        if nextState not in pred:
+                            pred[nextState] = set()
+                        pred[nextState].add(s)
+
+        prio_q = util.PriorityQueue()
+
+        # fill prio q
+        for s in self.mdp.getStates():
+            if self.mdp.isTerminal(s):
+                continue
+            
+            # best_q = float('-inf')
+
+            # for action in self.mdp.getPossibleActions(s):
+            #     cur = self.getQValue(s, action)
+            #     best_q = max(best_q, cur)
+            best_a = self.computeActionFromValues(s)
+            best_q = self.computeQValueFromValues(s, best_a)
+            max_diff = abs(best_q - self.values[s])
+            prio_q.update(s, -max_diff)
+
+        # iterate
+
+        for i in range(self.iterations):
+            if prio_q.isEmpty():
+                break
+            
+            cur_s = prio_q.pop()
+
+            if self.mdp.isTerminal(cur_s):
+                continue
+
+            best_a = self.computeActionFromValues(cur_s)
+            self.values[cur_s] = self.computeQValueFromValues(cur_s, best_a)
+
+
+            for pre in pred.get(cur_s):
+                if self.mdp.isTerminal(pre):
+                    continue
+
+                best_a = self.computeActionFromValues(pre)
+                best_q = self.computeQValueFromValues(pre, best_a)
+                diff = abs(self.values[pre] - best_q)
+
+                if diff > self.theta:
+                    prio_q.update(pre, -diff)
+        "*** YOUR CODE ***"
 
